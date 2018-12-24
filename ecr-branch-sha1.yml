@@ -1,0 +1,54 @@
+version: 2.1
+description: "Build Dockerfile and push to ECR by git branch and commit SHA"
+
+orbs:
+  aws-ecr: circleci/aws-ecr@0.0.4
+  aws-cli: circleci/aws-cli@0.1.1
+
+jobs:
+  build_and_push_image:
+    docker:
+      - image: circleci/python:3-stretch-browsers
+
+    parameters:
+      aws_account_url:
+        description: AWS Account URL. i.e. <project_id>.dkr.ecr.us-east-1.amazonaws.com
+        type: string
+      aws_repo_name:
+        description: AWS ECR Repository Name. Set in Terraform
+        type: string
+      aws_region:
+        description: AWS Region, generally no need to override
+        type: string
+        default: us-east-1
+    steps:
+      - aws-cli/install
+      - aws-cli/configure:
+          profile-name: default
+          aws-region: <<parameters.aws_region>>
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - aws-ecr/ecr-login:
+          region: <<parameters.aws_region>>
+      - run:
+          name: Clean branch name (remove slashes for ECR compatibility)
+          command: |
+            echo 'export CIRCLE_BRANCH_CLEAN=$(echo $CIRCLE_BRANCH | sed 's,/,--,g')' >> $BASH_ENV
+            source $BASH_ENV
+      - aws-ecr/build-image:
+          account-url: <<parameters.aws_account_url>>
+          repo: <<parameters.aws_repo_name>>
+          tag: "${CIRCLE_BRANCH_CLEAN}"
+      - aws-ecr/build-image:
+          account-url: <<parameters.aws_account_url>>
+          repo: <<parameters.aws_repo_name>>
+          tag: "${CIRCLE_SHA1}"
+      - aws-ecr/push-image:
+          account-url: <<parameters.aws_account_url>>
+          repo: <<parameters.aws_repo_name>>
+          tag: "${CIRCLE_BRANCH_CLEAN}"
+      - aws-ecr/push-image:
+          account-url: <<parameters.aws_account_url>>
+          repo: <<parameters.aws_repo_name>>
+          tag: "${CIRCLE_SHA1}"
