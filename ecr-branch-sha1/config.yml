@@ -32,14 +32,12 @@ commands:
         default: "master"
     steps:
       - run:
-          name: Cache custom Docker image
-          command: docker pull << parameters.account-url >>/<< parameters.repo >>:<< parameters.tag >> || echo "Failed"
-      - run:
-          name: Cache current branch Docker image
-          command: docker pull << parameters.account-url >>/<< parameters.repo >>:${CIRCLE_BRANCH_CLEAN} || echo "Failed"
-      - run:
-          name: Cache current SHA Docker image
-          command: docker pull << parameters.account-url >>/<< parameters.repo >>:${CIRCLE_SHA1} || echo "Failed"
+          name: Pull best Docker image from cache; SHA1, fallback to branch, fallback to custom / master
+          command: |
+            docker pull << parameters.account-url >>/<< parameters.repo >>:${CIRCLE_SHA1} || \
+              docker pull << parameters.account-url >>/<< parameters.repo >>:${CIRCLE_BRANCH_CLEAN} || \
+              docker pull << parameters.account-url >>/<< parameters.repo >>:<< parameters.tag >> || \
+              echo "Failed to find a source"
 
   build-image-with-cache:
     description: Adaptation of https://github.com/CircleCI-Public/aws-ecr-orb/blob/master/src/orb.yml but using previous Docker images as cache source
@@ -69,11 +67,6 @@ commands:
         type: string
         default: .
     steps:
-      - clean_branch_name
-      - build-cache:
-          account-url: <<parameters.account-url>>
-          repo: <<parameters.repo>>
-          tag: <<parameters.cache-tag>>
       - run:
           name: Build docker image
           command: |
@@ -114,6 +107,10 @@ jobs:
       - aws-ecr/ecr-login:
           region: <<parameters.aws_region>>
       - clean_branch_name
+      - build-cache:
+          account-url: <<parameters.aws_account_url>>
+          repo: <<parameters.aws_repo_name>>
+          tag: <<parameters.cache_tag>>
       - build-image-with-cache:
           account-url: <<parameters.aws_account_url>>
           repo: <<parameters.aws_repo_name>>
