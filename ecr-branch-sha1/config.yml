@@ -78,12 +78,12 @@ jobs:
       - build-image-with-cache:
           account-url: <<parameters.aws_account_url>>
           repo: <<parameters.aws_repo_name>>
-          cache_tag: <<parameters.cache_tag>>
+          cache-tag: <<parameters.cache_tag>>
           tag: "${CIRCLE_BRANCH_CLEAN}"
       - build-image-with-cache:
           account-url: <<parameters.aws_account_url>>
           repo: <<parameters.aws_repo_name>>
-          cache_tag: <<parameters.cache_tag>>
+          cache-tag: <<parameters.cache_tag>>
           tag: "${CIRCLE_SHA1}"
       - aws-ecr/push-image:
           account-url: <<parameters.aws_account_url>>
