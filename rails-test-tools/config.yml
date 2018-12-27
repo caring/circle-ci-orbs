@@ -1,0 +1,101 @@
+version: 2.1
+description: "Collection of reusable Rails test commands, jobs, and executors"
+
+examples:
+  test_rails_with_rspec_in_parallel:
+    usage:
+      version: 2.1
+      orbs:
+        rails-test-tools: caring-dev/rails-test-tools@0.1.0
+      workflows:
+        test_built_image:
+          jobs:
+            - test_rspec
+            - test_unit
+            - test_js
+      jobs:
+        test_rspec:
+          executor:
+            name: caring-dev/docker-mysql-redis
+            docker-image: my-test-image:latest
+          parallelism: 4
+          steps:
+            - caring-dev/rspec-parallel-junit
+
+        test_unit:
+          executor:
+            name: caring-dev/docker-mysql-redis
+            docker-image: my-test-image:latest
+          steps:
+            - caring-dev/test-unit
+
+        test_js:
+          docker:
+            - image: my-test-image:latest
+          steps:
+            - caring-dev/test-yarn
+
+executors:
+  docker-mysql-redis:
+    environment:
+      RAILS_ENV: test
+    parameters:
+      docker-image:
+        description: "What docker image to run"
+        type: string
+      working-directory:
+        description: "Rails.root"
+        type: string
+        default: /app
+    docker:
+      - image: <<parameters.docker-image>>
+      - image: circleci/mysql:5.7-ram
+        environment:
+          MYSQL_ALLOW_EMPTY_PASSWORD: "true"
+          MYSQL_ROOT_PASSWORD: ""
+      - image: redis:3.2-alpine
+    working_directory: <<parameters.working-directory>>
+
+  docker-postgres-redis:
+    environment:
+      RAILS_ENV: test
+    parameters:
+      docker-image:
+        description: "What docker image to run"
+        type: string
+      working-directory:
+        description: "Rails.root"
+        type: string
+        default: /app
+    docker:
+      - image: <<parameters.docker-image>>
+      - image: circleci/postgres:9-alpine-ram
+        environment:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: ""
+      - image: redis:3.2-alpine
+    working_directory: <<parameters.working-directory>>
+
+
+commands:
+  rspec-parallel-junit:
+    description: "Call RSpec with necessary config to support arbitrary parallelism across jobs"
+    steps:
+      - run:
+          command: bundle exec rake db:setup
+      - run:
+          command: |
+            TESTFILES=$(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)
+            bundle exec rspec --profile 10 --format RspecJunitFormatter --out test-results/rspec.xml --format progress -- ${TESTFILES}
+      - store_test_results:
+          path: test-results
+  test-unit:
+    steps:
+      - run:
+          command: bundle exec rake db:setup
+      - run:
+          command: bundle exec rake test
+  test-yarn:
+    steps:
+      - run:
+          command: yarn run test

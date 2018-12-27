@@ -5,6 +5,41 @@ orbs:
   aws-ecr: circleci/aws-ecr@0.0.4
   aws-cli: circleci/aws-cli@0.1.1
 
+commands:
+  # Adaptation of
+  # https://github.com/CircleCI-Public/aws-ecr-orb/blob/master/src/orb.yml
+  # but using previous Docker image as cache source
+  build-image-with-cache:
+    parameters:
+      account-url:
+        type: string
+        description: The Amazon ECR account URL that maps to an AWS account,
+                     e.g. {awsAccountNum}.dkr-ecr.us-west-2.amazonaws.com
+        default: $AWS_ECR_ACCOUNT_URL
+      repo:
+        type: string
+        description: Name of an Amazon ECR repository
+      tag:
+        description: A docker image tag (default = latest)
+        type: string
+        default: "latest"
+      cache-tag:
+        description: A docker image tag to use as a cache source (default = latest)
+        type: string
+        default: "latest"
+      dockerfile:
+        description: Name of dockerfile to use. Defaults to Dockerfile.
+        type: string
+        default: Dockerfile
+      path:
+        description: Path to the directory containing your Dockerfile and build context. Defaults to . (working directory).
+        type: string
+        default: .
+    steps:
+      - run:
+          name: Build docker image
+          command: "docker build -f << parameters.dockerfile >> -t << parameters.account-url >>/<< parameters.repo >>:<< parameters.tag >> --cache-from << parameters.account-url >>/<< parameters.repo >>:<< parameters.cache-tag >> << parameters.path >>"
+
 jobs:
   build_and_push_image:
     docker:
@@ -21,6 +56,10 @@ jobs:
         description: AWS Region, generally no need to override
         type: string
         default: us-east-1
+      cache_tag:
+        description: Tag of Docker Image to use as a cache hydration source
+        type: string
+        default: master
     steps:
       - aws-cli/install
       - aws-cli/configure:
@@ -36,13 +75,15 @@ jobs:
           command: |
             echo 'export CIRCLE_BRANCH_CLEAN=$(echo $CIRCLE_BRANCH | sed 's,/,--,g')' >> $BASH_ENV
             source $BASH_ENV
-      - aws-ecr/build-image:
+      - build-image-with-cache:
           account-url: <<parameters.aws_account_url>>
           repo: <<parameters.aws_repo_name>>
+          cache_tag: <<parameters.cache_tag>>
           tag: "${CIRCLE_BRANCH_CLEAN}"
-      - aws-ecr/build-image:
+      - build-image-with-cache:
           account-url: <<parameters.aws_account_url>>
           repo: <<parameters.aws_repo_name>>
+          cache_tag: <<parameters.cache_tag>>
           tag: "${CIRCLE_SHA1}"
       - aws-ecr/push-image:
           account-url: <<parameters.aws_account_url>>
