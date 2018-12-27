@@ -33,13 +33,13 @@ commands:
     steps:
       - run:
           name: Cache custom Docker image
-          command: docker pull << parameters.account-url >>/<< parameters.repo >>:<< parameters.tag >>
+          command: docker pull << parameters.account-url >>/<< parameters.repo >>:<< parameters.tag >> || echo "Failed"
       - run:
           name: Cache current branch Docker image
-          command: docker pull << parameters.account-url >>/<< parameters.repo >>:${CIRCLE_BRANCH_CLEAN}
+          command: docker pull << parameters.account-url >>/<< parameters.repo >>:${CIRCLE_BRANCH_CLEAN} || echo "Failed"
       - run:
           name: Cache current SHA Docker image
-          command: docker pull << parameters.account-url >>/<< parameters.repo >>:${CIRCLE_SHA1}
+          command: docker pull << parameters.account-url >>/<< parameters.repo >>:${CIRCLE_SHA1} || echo "Failed"
 
   build-image-with-cache:
     description: Adaptation of https://github.com/CircleCI-Public/aws-ecr-orb/blob/master/src/orb.yml but using previous Docker images as cache source
