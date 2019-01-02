@@ -30,14 +30,16 @@ commands:
         type: string
         default: "master"
     steps:
-      # These first two steps shouldn't be necessary but are.
+      # These first two steps shouldn't be necessary but are, due seemingly to a bug in Docker.
+      # Without these steps, the --cache-from calls will re-download the base image, even though
+      # it is already present in the local image cache.
       # See: https://discuss.circleci.com/t/docker-cache-from-flag-not-working/11525/15
       - run:
-          name: Find base image so we can pull it
+          name: Find name of Docker image's base image
           command: |
             echo "export BASE_IMAGE=$(grep "^FROM" Dockerfile | cut -d' ' -f2)" >> $BASH_ENV
       - run:
-          name: Pull base Docker image, due to weird bug in Docker
+          name: Pull Docker image's base image
           command: docker pull $BASE_IMAGE
       # This is the meat of the cache building
       - run:
