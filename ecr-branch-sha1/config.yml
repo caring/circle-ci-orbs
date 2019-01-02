@@ -36,7 +36,7 @@ commands:
       - run:
           name: Find base image so we can pull it
           command: |
-            export BASE_IMAGE=$(grep -ioP -m 1 '(?<=^from)\s+\S+' Dockerfile) >> $BASH_ENV
+            echo 'export BASE_IMAGE=$(grep -ioP -m 1 '(?<=^from)\s+\S+' Dockerfile)' >> $BASH_ENV
             source $BASH_ENV
       - run:
           name: Pull base Docker image, due to weird bug in Docker
