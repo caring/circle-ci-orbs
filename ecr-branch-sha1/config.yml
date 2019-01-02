@@ -13,7 +13,6 @@ commands:
           name: Clean branch name (remove slashes for ECR compatibility)
           command: |
             echo 'export CIRCLE_BRANCH_CLEAN=$(echo $CIRCLE_BRANCH | sed 's,/,--,g')' >> $BASH_ENV
-            source $BASH_ENV
 
   build-cache:
     description: Fetch the images we will use as cache sources
@@ -36,8 +35,7 @@ commands:
       - run:
           name: Find base image so we can pull it
           command: |
-            echo "export BASE_IMAGE=$(grep -ioP -m 1 '(?<=^from)\s+\S+' Dockerfile)" >> $BASH_ENV
-            source $BASH_ENV
+            echo "export BASE_IMAGE=$(grep "^FROM" Dockerfile | cut -d' ' -f2)" >> $BASH_ENV
       - run:
           name: Pull base Docker image, due to weird bug in Docker
           command: docker pull $BASE_IMAGE
