@@ -97,6 +97,10 @@ jobs:
         description: Tag of Docker Image to use as a cache hydration source, in addition to the current branch name and SHA name
         type: string
         default: master
+
+    environment:
+      SKIP_DB_CONNECT: true
+
     steps:
       - aws-cli/install
       - aws-cli/configure:

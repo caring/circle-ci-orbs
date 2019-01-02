@@ -82,7 +82,7 @@ commands:
     description: "Call RSpec with necessary config to support arbitrary parallelism across jobs"
     steps:
       - run:
-          command: bundle exec rake db:setup
+          command: SKIP_DB_CONNECT=true bundle exec rake db:setup
       - run:
           command: |
             TESTFILES=$(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)
@@ -92,7 +92,7 @@ commands:
   test-unit:
     steps:
       - run:
-          command: bundle exec rake db:setup
+          command: SKIP_DB_CONNECT=true bundle exec rake db:setup
       - run:
           command: bundle exec rake test
   test-yarn:
