@@ -99,3 +99,9 @@ commands:
     steps:
       - run:
           command: yarn run test
+
+  wait-for-mysql:
+    steps:
+      - run:
+          description: Wait for MySQL to finish booting
+          command: until nc -z 127.0.0.1 3306; do sleep 1; echo "Waiting for DB to come up..."; done
