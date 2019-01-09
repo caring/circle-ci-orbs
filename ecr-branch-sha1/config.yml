@@ -108,6 +108,10 @@ jobs:
         description: Tag of Docker Image to use as a cache hydration source, in addition to the current branch name and SHA name
         type: string
         default: master
+      before_build:
+        description: Optional steps to perform before build, e.g. cd into subdirectory
+        type: steps
+        default: []
 
     environment:
       SKIP_DB_CONNECT: true
@@ -122,6 +126,7 @@ jobs:
       - aws-ecr/ecr-login:
           region: <<parameters.aws_region>>
       - clean_branch_name
+      - steps: << parameters.before_build>>
       - build-cache:
           account-url: <<parameters.aws_account_url>>
           repo: <<parameters.aws_repo_name>>
