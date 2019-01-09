@@ -108,6 +108,10 @@ jobs:
         description: Tag of Docker Image to use as a cache hydration source, in addition to the current branch name and SHA name
         type: string
         default: master
+      working_directory:
+        description: Optionally override the working_directory
+        type: string
+        default: ~/project
       before_build:
         description: Optional steps to perform before build, e.g. cd into subdirectory
         type: steps
@@ -115,6 +119,8 @@ jobs:
 
     environment:
       SKIP_DB_CONNECT: true
+
+    working_directory: <<parameters.working_directory>>
 
     steps:
       - aws-cli/install
