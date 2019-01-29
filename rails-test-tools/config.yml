@@ -47,9 +47,13 @@ executors:
         description: "Rails.root"
         type: string
         default: /app
+      mysql-version:
+        description: The version of MySQL to use
+        type: string
+        default: "5.7"
     docker:
       - image: <<parameters.docker-image>>
-      - image: circleci/mysql:5.7-ram
+      - image: circleci/mysql:<<parameters.mysql-version>>-ram
         environment:
           MYSQL_ALLOW_EMPTY_PASSWORD: "true"
           MYSQL_ROOT_PASSWORD: ""
