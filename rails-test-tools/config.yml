@@ -54,7 +54,6 @@ executors:
     docker:
       - image: <<parameters.docker-image>>
       - image: circleci/mysql:<<parameters.mysql-version>>-ram
-        command: [--default-authentication-plugin=mysql_native_password]
         environment:
           MYSQL_ALLOW_EMPTY_PASSWORD: "true"
           MYSQL_ROOT_PASSWORD: ""
